@@ -1,84 +1,59 @@
-# Oregon Elk Hunting Data Explorer (GitHub Pages)
+# 🦌 Oregon Elk Hunting Data Explorer
 
-A static website version of the hunting-data notebook. It's a plain HTML/JS page - GitHub
-Pages hosts it directly, no server-side code involved. All the data lives in a single
-`data/data.json` file committed to the repo, which the page fetches at load time.
+An interactive web app for exploring Oregon elk controlled-hunt tag draw odds and harvest
+success rates using data from the 2021–2026 seasons. 
 
-## How it fits together
+**View the live site → https://a-carpenter.github.io/ExplORe/**
 
-- **`scripts/build_data.py`** - a one-time (well, once-a-year) Python step. It parses the
-  ODFW Elk Preference Point Draw Report Excel files and the Elk Harvest Summary PDFs
-  (the same parsing logic validated in the notebook) and writes everything out to
-  `data/data.json`.
-- **`data/data.json`** - the pre-processed data: per hunt, per year, application/draw
-  numbers and harvest numbers, plus the draw%/success% summary used in the third plot.
-  This is the file that actually gets committed and served by GitHub Pages.
-- **`index.html` / `assets/app.js` / `assets/calc.js` / `assets/style.css`** - the page
-  itself. `calc.js` has the pure number-crunching (selection %, draw % average, historical
-  table, report text) ported from the notebook; `app.js` wires that up to three Plotly.js
-  graphs and the report/table underneath.
 
-Because GitHub Pages can only serve static files, there's no way to have it run the
-Excel/PDF parsing live in the browser (or at least not reliably - parsing multi-row PDF
-table headers and cross-referencing hunt numbers, like the notebook does, is not something
-you'd want to redo in client-side JS). So the pattern is: **process data locally, commit
-the resulting JSON, GitHub Pages serves it.**
+## What it does
+Pick any 200-series elk hunt from the dropdown and get:
 
-## One-time setup
+- **Applications by year** — how many people applied for that hunt, 2021–2026
+- **Draw rate by residency** — the percent of Resident vs. Non-Resident applicants who
+  were drawn, by year
+- **Draw odds vs. hunt success** — an interactive scatter of every elk hunt's average draw
+  percentage (last 3 years) against its average harvest success rate (last 5 years), with
+  your selected hunt highlighted and error bars showing year-to-year variability. Hover any
+  dot to see which hunt it is; click one to jump straight to it.
+- **A full historical data table** — year-by-year applications, draw rates, hunter counts,
+  elk harvested, and harvest success rate for the selected hunt
 
-1. Create a new GitHub repository and push everything in this folder to it.
-2. In the repo settings, go to **Settings -> Pages**, set Source to "Deploy from a branch",
-   and pick your default branch (root folder). GitHub will publish the site at
-   `https://<your-username>.github.io/<repo-name>/`.
-3. That's it - `index.html` and `data/data.json` are already committed, so the site works
-   immediately with whatever data you push.
+## Data sources
+All figures come from Oregon Department of Fish and Wildlife (ODFW) public reports:
 
-## Updating the data each year
+- [Point summary reports](https://myodfw.com/articles/point-summary-reports) (Elk Preference Point Draw Reports — application/draw data by hunt)
+- [Big game hunting harvest statistics](https://myodfw.com/articles/big-game-hunting-harvest-statistics) (Elk Harvest Summary Reports — harvest and success-rate data by hunt)
 
-1. Put the new year's source files in a folder (they are **not** committed by default -
-   see note below), named the same way as before, e.g.:
-   - `2027_Elk_Preference_Point_Draw_Report.xlsx`
-   - `2027_Elk_Harvest_Summary.pdf`
-2. Update the year ranges in `scripts/build_data.py` if the years being tracked change
-   (`APP_YEARS`, `HARVEST_YEARS`, `DRAW_AVG_YEARS` near the top of the file).
-3. Regenerate the data file:
-   ```
-   pip install pandas openpyxl pypdf
-   python scripts/build_data.py --data-dir /path/to/your/source/files --out data/data.json
-   ```
-4. Commit and push `data/data.json`. GitHub Pages picks up the change automatically
-   (usually within a minute or two).
+This project is an independent tool for exploring  public data and is not affiliated
+with or endorsed by ODFW. Always double-check current-year draw odds and regulations
+against ODFW's official reports before making application decisions.
 
-### Should you also commit the raw Excel/PDF files?
+## How it works
+This is a static site — no backend, no database. GitHub Pages serves the HTML/JS directly,
+and all the hunt data lives in one file, which the page fetches when it loads.
 
-Optional, but recommended for reproducibility - e.g. commit them under a `raw_data/`
-folder. GitHub Pages won't do anything with them (only `data/data.json` is fetched by the
-page), but it means anyone can re-run `build_data.py` from the repo alone and get the same
-result, and you have a record of the original source files.
+That file is generated locally (not in the browser), which parses ODFW's Excel draw reports
+and PDF harvest summaries into a single clean dataset. 
 
-## Running it locally before you push
+## Updating the data for a new season
+Data will be updated twice annually when [1] previous season hunt results are released and 
+[2] when upcoming seasons tag draw results are released
 
-Browsers block `fetch()` of local files opened directly (`file://`), so serve the folder
-over a tiny local web server to test:
-
-```
-cd hunting-webpage
-python3 -m http.server 8000
-```
-
-Then open `http://localhost:8000/` in a browser.
-
-## Notes on the data / parsing quirks
-
-- Only "200-series" hunt numbers (elk hunts) are in the dropdown.
-- The harvest PDFs occasionally list the same hunt code on more than one row in a single
-  year's report (looks like a duplication in ODFW's own data). When that happens, hunters
-  and harvest totals are summed across the rows, and the success % is recomputed from
-  those summed totals (harvest ÷ hunters) rather than averaging the printed percentages -
-  averaging can produce nonsensical values when one of the duplicate rows has a very small
-  sample size.
+## Known data quirks
+- Only 200-series hunt numbers (elk hunts) are included.
+- A handful of hunt codes appear on more than one row in a single year's harvest PDF
+  (this looks like a duplication in ODFW's source data rather than genuinely different
+  hunts). When that happens, hunter counts and harvest totals are summed across the rows,
+  and the success rate is recomputed from those combined totals — averaging the printed
+  percentages directly can produce misleading results when one row has a very small sample.
 - Some hunts (e.g. muzzleloader-only hunts) don't appear in the "Any Legal Weapon" harvest
-  PDFs at all. The report and third plot handle this gracefully (shown as "N/A" / a note
-  that no harvest data is available), rather than erroring.
-- 2026 has application data but no harvest data yet (season hasn't happened), so its
-  historical-table row will show "N/A" for the harvest-related columns.
+  reports at all; the app shows "N/A" for those rather than guessing.
+- 2026 has application data but no harvest data yet, since that season hasn't happened.
+
+## Contributing
+Issues and pull requests are welcome — particularly if you spot a parsing edge case in a
+future year's report format that isn't handled correctly.
+
+## License
+No license has been applied yet.
