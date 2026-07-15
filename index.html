@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oregon Elk Hunting Data Explorer</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <h1>Oregon Elk Hunting Data Explorer</h1>
+    <p class="subtitle">Elk tag application and harvest-success data, 2021&ndash;2026.</p>
+
+    <div class="controls">
+      <label for="hunt-select">Hunt #:</label>
+      <select id="hunt-select"></select>
+      <span id="load-status" class="status"></span>
+    </div>
+
+    <div class="plot-row">
+      <div id="plot1" class="plot"></div>
+      <div id="plot2" class="plot"></div>
+      <div id="plot3" class="plot"></div>
+    </div>
+    <p class="hint">Plot 3: hover a gray dot to see which hunt it is; click a dot to select that hunt everywhere on the page.</p>
+
+    <div id="report" class="report"></div>
+  </div>
+
+  <script src="assets/calc.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
